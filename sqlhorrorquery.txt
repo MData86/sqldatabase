@@ -1,0 +1,114 @@
+CREATE PROCEDURE insert_game
+    @Title nvarchar(100),
+    @Genre nvarchar(100),
+    @Developer nvarchar(100),
+    @Platform nvarchar(200),
+    @Release_year nvarchar(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- This stored procedure allows you to insert new rows into the 'horror_games' table. 
+	-- To use this stored procedure, pass in the values for the 'Title', 'Genre', 'Developer', 'Platform', and 'Release_year' columns as parameters.
+    INSERT INTO horror_games (Title, Genre, Developer, Platform, Release_year)
+    VALUES (@Title, @Genre, @Developer, @Platform, @Release_year);
+    
+    -- Display a message indicating the new row has been inserted
+    SELECT 'New row inserted successfully' AS Message;
+END
+
+EXEC insert_game 
+    @Title = '',
+    @Genre = '',
+    @Developer = '',
+    @Platform = '',
+    @Release_year = '';
+
+
+--Modified insert_game Procedure with Error Handling:
+
+CREATE PROCEDURE insert_game
+    @Title nvarchar(100),
+    @Genre nvarchar(100),
+    @Developer nvarchar(100),
+    @Platform nvarchar(200),
+    @Release_year nvarchar(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        INSERT INTO horror_games (Title, Genre, Developer, Platform, Release_year)
+        VALUES (@Title, @Genre, @Developer, @Platform, @Release_year);
+        
+        -- Display a message indicating the new row has been inserted
+        SELECT 'New row inserted successfully' AS Message;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ErrorMessage;
+    END CATCH
+END
+
+--Modified search_games Procedure with Error Handling:
+
+CREATE PROCEDURE search_games
+    @search_term VARCHAR(200)
+AS
+BEGIN
+    BEGIN TRY
+        SELECT * 
+        FROM horror_games 
+        WHERE Title LIKE '%' + @search_term + '%'
+           OR Genre LIKE '%' + @search_term + '%'
+           OR Developer LIKE '%' + @search_term + '%'
+           OR Platform LIKE '%' + @search_term + '%'
+           OR Release_year LIKE '%' + @search_term + '%'
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ErrorMessage;
+    END CATCH
+END
+ --Modified sort_games Procedure with Error Handling:
+
+Copy code
+CREATE PROCEDURE sort_games
+    @sort_column VARCHAR(20),
+    @sort_order VARCHAR(4),
+    @num_rows INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        DECLARE @sql NVARCHAR(MAX);
+        SET @sql = 'SELECT TOP ' + CAST(@num_rows AS VARCHAR) + ' * FROM horror_games ORDER BY ' + QUOTENAME(@sort_column) + ' ' + @sort_order;
+        EXEC sp_executesql @sql;
+    END TRY
+    BEGIN CATCH
+        SELECT ERROR_MESSAGE() AS ErrorMessage;
+    END CATCH
+END
+
+-- To use the stored procedure, you will need to execute it typing the EXEC sort_horror_games followed by the input parameters you want to specify. 
+-- The stored procedure allows you to sort the table by different columns and specify the number of rows to return.
+-- The input parameters for the stored procedure are:
+-- @sort_column: This is the name of the column you want to sort the table by. You can choose from "Title", "Genre", "Developer", "Platform", or "Release_year".
+-- @sort_order: This specifies the sort order you want to use. You can choose from "ASC" (ascending) or "DESC" (descending).
+-- @num_rows: This specifies the number of rows you want to return. This should be an integer value.
+-- Example: EXEC get_horror_games 'Title', 'ASC', 10;
+-- This will sort the horror_games table by the Title column in ascending order and return the top 10 rows.
+-- You can also choose to sort by Genre, Developer, Platform and Release_year
+-- You can specify the sort order (ASC or DESC) with the second parameter. 
+-- The third parameter allows you to specify the number of rows to return.
+
+EXEC sort_games 'Title', 'ASC', 40;
+
+SELECT Platform, COUNT(*) as Total
+FROM horror_games
+GROUP BY Platform
+ORDER BY Total DESC;
+
+SELECT TOP 5 Developer, COUNT(*) AS NumHorrorGames
+FROM horror_games
+GROUP BY Developer
+ORDER BY NumHorrorGames DESC;
+
+
